@@ -1,0 +1,22 @@
+version: '2'
+services:
+  cntlm:
+    image: robertdebock/docker-cntlm:latest
+    restart: always
+    volumes:
+      - {{ proxy_cntlm_conf_path}}:/etc/cntlm.conf
+    environment:
+      CUSTOM_CONFIG: "true"
+    deploy:
+      replicas: 5
+    expose:
+      - "3128"
+
+  haproxy:
+    restart: always
+    image: bitnami/haproxy:2.6.6 
+    ports:  
+      - 3128:3128  
+    container_name: 'haproxy'
+    volumes:
+      - {{ proxy_haproxy_conf_path}}:/bitnami/haproxy/conf/haproxy.cfg:ro

@@ -1,0 +1,38 @@
+
+global
+  #stats socket /var/run/api.sock user haproxy group haproxy mode 660 level admin expose-fd listeners
+  log stdout format raw local0 info
+
+# https://delta.blue/blog/haproxy-timeouts/
+defaults
+  mode tcp
+  retries 3
+  option  redispatch
+  timeout connect 4s
+  timeout client 30s
+  timeout server 30s
+  # Security related things
+  timeout http-request 10s
+  timeout http-keep-alive 2s
+  timeout queue 5s
+  timeout tunnel 2m
+  timeout client-fin 1s
+  timeout server-fin 1s
+  log global
+
+frontend stats
+  bind *:8404
+  stats enable
+  stats uri /
+  stats refresh 10s
+
+frontend myfrontend
+  bind :3128
+  default_backend webservers
+
+resolvers docker
+    nameserver dns1 127.0.0.11:53
+
+backend webservers
+  #server s1 cntlm:3128 check
+  server-template cntlm- 5 cntlm:3128 check resolvers docker init-addr libc,none

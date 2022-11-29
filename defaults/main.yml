@@ -1,0 +1,15 @@
+---
+# defaults file for cntlm-loadbalanced
+cntlm_username:
+cntlm_passlm:
+cntlm_passnt:
+cntlm_passntlmv2:
+cntlm_proxies:
+cntlm_no_proxy: ""
+
+cntlm_listen:
+cntlm_allow_cidrs:
+cntlm_deny_cidrs:
+
+proxy_file_owner: ansible
+proxy_file_group: root
