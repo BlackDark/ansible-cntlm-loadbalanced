@@ -1,28 +1,25 @@
 ---
 # tasks file for cntlm-loadbalanced
-- name: Configure vars
-  ansible.builtin.set_fact: proxy_dir="/opt/proxy"
-
 - name: Create config dir
   become: true
   ansible.builtin.file:
-    path: /opt/proxy
+    path: "{{ cntlm_proxy_dir }}"
     state: directory
     mode: u+rwx,g+srwx,o+rx
 
 - name: Configure config paths
   ansible.builtin.set_fact:
-    proxy_cntlm_conf_path: "{{ proxy_dir }}/cntlm.conf"
-    proxy_haproxy_conf_path: "{{ proxy_dir }}/haproxy.conf"
-    proxy_dockercompose_path: "{{ proxy_dir }}/docker-compose.yml"
+    proxy_cntlm_conf_path: "{{ cntlm_proxy_dir }}/cntlm.conf"
+    proxy_haproxy_conf_path: "{{ cntlm_proxy_dir }}/haproxy.conf"
+    proxy_dockercompose_path: "{{ cntlm_proxy_dir }}/docker-compose.yml"
 
 - name: Create cntlm conf
   become: true
   ansible.builtin.template:
     src: cntlm.conf.j2
     dest: "{{ proxy_cntlm_conf_path }}"
-    owner: "{{ proxy_file_owner }}"
-    group: "{{ proxy_file_group }}"
+    owner: "{{ proxy_file_owner|default(omit) }}"
+    group: "{{ proxy_file_group|default(omit) }}"
     mode: u+rwx,g+srwx
   register: proxy_cntlm_changed
 
@@ -31,8 +28,8 @@
   ansible.builtin.template:
     src: haproxy.conf.j2
     dest: "{{ proxy_haproxy_conf_path }}"
-    owner: "{{ proxy_file_owner }}"
-    group: "{{ proxy_file_group }}"
+    owner: "{{ proxy_file_owner|default(omit) }}"
+    group: "{{ proxy_file_group|default(omit) }}"
     mode: u+rwx,g+srwx
   register: proxy_haproxy_changed
 
@@ -41,31 +38,19 @@
   ansible.builtin.template:
     src: docker-compose.yml.j2
     dest: "{{ proxy_dockercompose_path }}"
-    owner: "{{ proxy_file_owner }}"
-    group: "{{ proxy_file_group }}"
+    owner: "{{ proxy_file_owner|default(omit) }}"
+    group: "{{ proxy_file_group|default(omit) }}"
     mode: u+rwx,g+srwx
 
 - name: "Start docker services"
   become: true
   command:
-    chdir: "{{ proxy_dir }}"
-    cmd: docker-compose up -d
+    chdir: "{{ cntlm_proxy_dir }}"
+    cmd: docker-compose up -d --pull always
 
 - name: "Restart on config change"
   become: true
   command:
-    chdir: "{{ proxy_dir }}"
+    chdir: "{{ cntlm_proxy_dir }}"
     cmd: docker-compose restart
   when: proxy_haproxy_changed.changed or proxy_cntlm_changed.changed
-
-- name: "Update docker images"
-  become: true
-  command:
-    chdir: "{{ proxy_dir }}"
-    cmd: docker-compose pull
-
-- name: "Restart docker services"
-  become: true
-  command:
-    chdir: "{{ proxy_dir }}"
-    cmd: docker-compose up -d

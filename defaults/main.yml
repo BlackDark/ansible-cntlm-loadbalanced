@@ -11,5 +11,7 @@ cntlm_listen:
 cntlm_allow_cidrs:
 cntlm_deny_cidrs:
 
-proxy_file_owner: ansible
-proxy_file_group: root
+cntlm_proxy_file_owner: ""
+cntlm_proxy_file_group: ""
+
+cntlm_proxy_dir: "/opt/cntlm_lb"
